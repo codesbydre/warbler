@@ -315,8 +315,12 @@ def homepage():
     """
 
     if g.user:
+        followed_users = [followed.id for followed in g.user.following] # Use list comprehension to get IDs of users that current user is following
+        followed_users.append(g.user.id)
+
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(followed_users))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
