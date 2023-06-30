@@ -254,7 +254,7 @@ def delete_user():
 
 
 ##############################################################################
-# Messages routes:
+# Messages routes and Like route:
 
 @app.route('/messages/new', methods=["GET", "POST"])
 def messages_add():
@@ -301,6 +301,43 @@ def messages_destroy(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+
+@app.route('/users/add_like/<int:message_id>', methods=['POST'])
+def add_like(message_id):
+    """Toggle a liked message for currently logged in user"""
+    if not g.user:
+        flash("Access unauthorized", "danger")
+        return redirect("/")
+    
+    liked_message = Message.query.get_or_404(message_id)
+
+    if liked_message.user_id == g.user.id:
+        flash("You cannot like your own messages.", "danger")
+        return redirect("/")
+    
+    user_likes = g.user.likes
+
+    if liked_message in user_likes: # if a message is already like, unlike it
+        g.user.likes = [like for like in user_likes if like != liked_message]
+
+    else:
+        g.user.likes.append(liked_message)
+
+    db.session.commit()
+
+    return redirect("/")
+
+
+@app.route('/users/<int:user_id>/likes')
+def show_likes(user_id):
+    """Show list of messages this user has liked."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+        
+    user = User.query.get_or_404(user_id)
+    return render_template('users/likes.html', user=user, messages=user.likes)
 
 ##############################################################################
 # Homepage and error pages
