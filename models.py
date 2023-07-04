@@ -94,14 +94,14 @@ class User(db.Model):
         nullable=False,
     )
 
-    messages = db.relationship('Message', back_populates='user')
+    messages = db.relationship('Message', back_populates='user') # Added to stop SQLA warning about relationships
 
     followers = db.relationship(
         "User",
         secondary="follows",
         primaryjoin=(Follows.user_being_followed_id == id),
         secondaryjoin=(Follows.user_following_id == id),
-        back_populates="following"
+        back_populates="following" # Added to stop SQLA warning about relationships
     )
 
     following = db.relationship(
@@ -109,7 +109,7 @@ class User(db.Model):
         secondary="follows",
         primaryjoin=(Follows.user_following_id == id),
         secondaryjoin=(Follows.user_being_followed_id == id),
-        back_populates="followers"
+        back_populates="followers" # Added to stop SQLA warning about relationships
     )
 
     likes = db.relationship(
@@ -199,7 +199,7 @@ class Message(db.Model):
         nullable=False,
     )
 
-    user = db.relationship('User', back_populates='messages')
+    user = db.relationship('User', back_populates='messages') # Added to stop SQLA warning about relationships
 
 
 def connect_db(app):
