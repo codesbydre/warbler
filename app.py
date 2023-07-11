@@ -284,6 +284,8 @@ def messages_show(message_id):
     """Show a message."""
 
     msg = Message.query.get(message_id)
+    if msg is None:
+        return render_template('404.html'), 404 #implement 404 error page template later
     return render_template('messages/show.html', message=msg)
 
 

@@ -26,7 +26,7 @@ from app import app, CURR_USER_KEY
 # once for all tests --- in each test, we'll delete the data
 # and create fresh new clean test data
 
-db.create_all()
+# db.create_all()
 
 # Don't have WTForms use CSRF at all, since it's a pain to test
 
@@ -39,17 +39,19 @@ class MessageViewTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data."""
 
-        User.query.delete()
-        Message.query.delete()
-
         self.client = app.test_client()
+        with app.app_context():
+            db.create_all()
+            User.query.delete()
+            Message.query.delete()
 
-        self.testuser = User.signup(username="testuser",
+            self.testuser = User.signup(username="testuser",
                                     email="test@test.com",
                                     password="testuser",
                                     image_url=None)
 
-        db.session.commit()
+            db.session.commit()
+            self.testuser_id = self.testuser.id
 
     def test_add_message(self):
         """Can use add a message?"""
@@ -59,7 +61,7 @@ class MessageViewTestCase(TestCase):
 
         with self.client as c:
             with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.testuser.id
+                sess[CURR_USER_KEY] = self.testuser_id
 
             # Now, that session setting is saved, so we can have
             # the rest of ours test
@@ -69,5 +71,98 @@ class MessageViewTestCase(TestCase):
             # Make sure it redirects
             self.assertEqual(resp.status_code, 302)
 
-            msg = Message.query.one()
-            self.assertEqual(msg.text, "Hello")
+            with app.app_context():
+                msg = Message.query.one()
+                self.assertEqual(msg.text, "Hello")
+    
+    def test_add_no_session(self):
+        """Test that app denies unauthorized attempts to post a message"""
+        with self.client as c:
+            resp = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", str(resp.data))
+
+    def test_add_invalid_user(self):
+        """Test that app denies attempts to post message from non-existent user"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = 9999999 # user does not exist
+
+            resp = c.post("/messages/new", data={"text": "Hello"}, follow_redirects=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", str(resp.data))
+
+    def test_message_show(self):
+        """Test showing a specific message."""
+        
+        m = Message(
+            id=1234,
+            text="a test message",
+            user_id=self.testuser_id
+        )
+
+        with self.client as c:
+            with app.app_context():
+                db.session.add(m)
+                db.session.commit()
+
+                with c.session_transaction() as sess:
+                    sess[CURR_USER_KEY] = self.testuser_id
+
+                m = Message.query.get(1234)
+
+                resp = c.get(f'/messages/{m.id}')
+
+                self.assertEqual(resp.status_code, 200)
+                self.assertIn(m.text, str(resp.data))
+
+    def test_invalid_message_show(self):
+        """Test showing an invalid message."""
+        
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser_id
+
+            resp = c.get('/messages/99999999')
+
+            self.assertEqual(resp.status_code, 404)
+
+    def test_message_delete(self):
+        """Test deleting a message."""
+
+        m = Message(
+            id=1234,
+            text="a test message",
+            user_id=self.testuser_id
+        )
+
+        with self.client as c:
+            with app.app_context():
+                db.session.add(m)
+                db.session.commit()
+
+                with c.session_transaction() as sess:
+                    sess[CURR_USER_KEY] = self.testuser_id
+
+                resp = c.post("/messages/1234/delete", follow_redirects=True)
+                self.assertEqual(resp.status_code, 200)
+
+                m = Message.query.get(1234)
+                self.assertIsNone(m)
+
+    def test_message_delete_no_authentication(self):
+        """Test deletion of a message without authentication."""
+        m = Message(
+            id=1234,
+            text="a test message",
+            user_id=self.testuser_id)
+
+        with self.client as c:
+            with app.app_context():
+                db.session.add(m)
+                db.session.commit()
+
+                resp = c.post(f"/messages/{m.id}/delete", follow_redirects=True)
+                self.assertEqual(resp.status_code, 200)
+                self.assertIn("Access unauthorized.", str(resp.data))
+            
