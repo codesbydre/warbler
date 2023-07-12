@@ -36,29 +36,29 @@ class UserViewTestCase(TestCase):
             self.testuser = User.signup(username="testuser",
                                     email="test@test.com",
                                     password="testuser",
-                                    image_url=None)
+                                    image_url=None, location=None)
 
             db.session.add(self.testuser)
             db.session.commit()
             
             self.testuser_id = self.testuser.id
             
-            self.u1 = User.signup(username="abc", email="test1@test.com", password="password", image_url=None)
+            self.u1 = User.signup(username="abc", email="test1@test.com", password="password", image_url=None, location=None)
             db.session.add(self.u1)
             db.session.commit()
             self.u1_id = self.u1.id
 
-            self.u2 = User.signup(username="efg", email="test2@test.com", password="password", image_url=None)
+            self.u2 = User.signup(username="efg", email="test2@test.com", password="password", image_url=None, location=None)
             db.session.add(self.u2)
             db.session.commit()
             self.u2_id = self.u2.id
 
-            self.u3 = User.signup(username="hij", email="test3@test.com", password="password", image_url=None)
+            self.u3 = User.signup(username="hij", email="test3@test.com", password="password", image_url=None, location=None)
             db.session.add(self.u3)
             db.session.commit()
             self.u3_id = self.u3.id
 
-            self.u4 = User.signup(username="testing", email="test4@test.com", password="password", image_url=None)
+            self.u4 = User.signup(username="testing", email="test4@test.com", password="password", image_url=None, location=None)
             db.session.add(self.u4)
             db.session.commit()
             self.u4_id = self.u4.id

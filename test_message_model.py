@@ -30,7 +30,7 @@ class MessageModelTestCase(TestCase):
             Follows.query.delete()
 
             password = "hashed_password"
-            u1 = User.signup("testuser", password, "test@test.com", "test image")
+            u1 = User.signup("testuser", password, "test@test.com", "test image", "test location")
             db.session.add(u1)
             db.session.commit()
 
@@ -55,7 +55,7 @@ class MessageModelTestCase(TestCase):
             Follows.query.delete()
 
             password = "hashed_password"
-            u1 = User.signup("testuser", password, "test@test.com", "test image")
+            u1 = User.signup("testuser", password, "test@test.com", "test image", "test location")
             db.session.add(u1)
             db.session.commit()
 
@@ -75,7 +75,7 @@ class MessageModelTestCase(TestCase):
             Follows.query.delete()
 
             password = "hashed_password"
-            u1 = User.signup("testuser", password, "test@test.com", "test image")
+            u1 = User.signup("testuser", password, "test@test.com", "test image", "test location")
             db.session.add(u1)
             db.session.commit()
 

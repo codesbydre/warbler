@@ -49,8 +49,8 @@ class UserModelTestCase(TestCase):
             self.password1 = "hashed_password"
             self.password2 = "hashed_password2"
 
-            u1 = User.signup("testuser", self.password1, "test@test.com", "test image")
-            u2 = User.signup("testuser2", self.password2, "test2@test.com", "test image2")
+            u1 = User.signup("testuser", self.password1, "test@test.com", "test image", "test location")
+            u2 = User.signup("testuser2", self.password2, "test2@test.com", "test image2", "test location")
             db.session.add_all([u1, u2])
             db.session.commit()
 
@@ -128,7 +128,7 @@ class UserModelTestCase(TestCase):
     def test_user_signup(self):
         """Does User.signup successfully create a new user given valid credentials?"""
         with app.app_context():
-            user = User.signup("testuser3", "hashed_password3", "test3@test.com", "test image3")
+            user = User.signup("testuser3", "hashed_password3", "test3@test.com", "test image3", "test location")
             db.session.commit()
 
             u_test = db.session.get(User, user.id)
@@ -138,7 +138,7 @@ class UserModelTestCase(TestCase):
         """Does User.signup fail to create a new user if any of the validations (e.g. uniqueness, non-nullable fields) fail?"""
         with app.app_context():
             with self.assertRaises(IntegrityError):
-                User.signup("testuser", "test@test.com", "hashed_password", "test image")
+                User.signup("testuser", "test@test.com", "hashed_password", "test image", "test location")
                 db.session.commit()
 
     def test_user_authenticate(self):
