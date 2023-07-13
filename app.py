@@ -353,18 +353,25 @@ def homepage():
 
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
+    - logged in, but not following anyone: 100 most recent messages from all users
     """
 
     if g.user:
         followed_users = [followed.id for followed in g.user.following] # Use list comprehension to get IDs of users that current user is following
-        followed_users.append(g.user.id)
-
-        messages = (Message
-                    .query
-                    .filter(Message.user_id.in_(followed_users))
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+        if followed_users:  # If the user is following others
+            followed_users.append(g.user.id)  # Also add the user's own ID to see their own posts
+            messages = (Message
+                        .query
+                        .filter(Message.user_id.in_(followed_users))
+                        .order_by(Message.timestamp.desc())
+                        .limit(100)
+                        .all())
+        else:  # If the user is not following anyone
+            messages = (Message
+                        .query
+                        .order_by(Message.timestamp.desc())
+                        .limit(100)
+                        .all())
 
         return render_template('home.html', messages=messages)
 
